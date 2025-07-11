@@ -32,7 +32,7 @@ func GetHTML(rawURL string) (string, error) {
 }
 
 
-func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
+func (cfg *config) crawlPage(rawCurrentURL string) {
 
 	// Base and Current are the same for the first
 	// Current is used to do the calls, base is used for a base case
@@ -44,7 +44,7 @@ func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
 
 	// Uses url.Parse to compare the baseURL and CurrentURL (after normalization)
 	// to make sure we haven't left the page
-	err = compareURL(rawBaseURL, rawCurrentURL)
+	err = compareURL(cfg.baseURL, rawCurrentURL)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -52,15 +52,13 @@ func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
 
 	// Start the HTML collection and review
 
-	
-
 	_, exists := pages[crawlURL]
 	if exists {
 		pages[crawlURL] ++
 		return
 	}
 
-	pages[crawlURL] = 1
+	cfg.pages[crawlURL] = 1
 	fmt.Printf("Crawling: %v\n", crawlURL)
 
 	html, err := GetHTML(rawCurrentURL)
@@ -76,7 +74,7 @@ func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
 	}
 	
 	for _, newLink := range links {
-			crawlPage(rawBaseURL, newLink, pages)
+			crawlPage(newLink)
 		}
 		
 	}

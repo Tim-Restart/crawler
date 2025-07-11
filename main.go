@@ -5,9 +5,19 @@ import (
 	"os"
 	)
 
+type config struct {
+	pages              map[string]int
+	baseURL            *url.URL
+	mu                 *sync.Mutex
+	concurrencyControl chan struct{}
+	wg                 *sync.WaitGroup
+}
+
 
 
 func main(){
+
+	
 
 	var website string
 
@@ -22,34 +32,25 @@ func main(){
 		website = os.Args[1]
 	}
 
-	
+	baseLink, err := normalizeURL(website)
+	if err != nil {
+		fmt.Println("Error normalizing URL")
+		return
+	}
 
-	pages := make(map[string]int)
+	// Pickup here with the Mu and channels stuff
+	cfg := &config{
+		pages: make(map[string]int),
+		baseURL: baseLink,
 
-	crawlPage(website, website, pages)
+	}
 
-	for _, page := range pages {
+
+	cfg.crawlPage(website)
+
+	for _, page := range cfg.pages {
 		fmt.Println(page)
 	}
-
-	
-
-	// Testing absolute and relative URLS collections
-	/*
-	body, err := GetHTML(website)
-	if err != nil {
-		return
-	}
-
-	urls, err := GetURLsFromHTML(body, website)
-	if err != nil {
-		return
-	}
-
-	for i := range urls {
-		fmt.Println(urls[i])
-	}
-	*/
 
 	return
 
