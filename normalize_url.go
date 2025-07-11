@@ -25,3 +25,26 @@ func normalizeURL(link string) (string, error){
 	fmt.Println(sanatised)
 	return strings.TrimSuffix(sanatised, "/"), nil
 }
+
+// Helper function for comparing URLS in the crawlPage function
+
+func compareURL(baseURL, currentURL string) error {
+
+	baseURLCheck, err := url.Parse(baseURL)
+	if err != nil {
+		fmt.Println("Error parsing base URL for checking")
+		return err
+	}
+
+	crawlURLCheck, err := url.Parse(currentURL)
+	if err != nil {
+		return err
+	}
+
+	if baseURLCheck.Host != crawlURLCheck.Host {
+		err = fmt.Errorf("Hosts do not match, left crawl target page")
+		return err
+	} else {
+		return nil
+	}
+}
