@@ -34,7 +34,7 @@ func GetURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 		return nil, err
 	}
 
-	links := make([]string, 10)
+	links := []string{}
 
 	htmmlReader := strings.NewReader(htmlBody)
 	nodeTree, err := html.Parse(htmmlReader)
@@ -49,7 +49,7 @@ func GetURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 				if a.Key == "href" {
 					// Check if a.Val has a suffix here
 					if strings.HasPrefix (a.Val, "http") {
-						links = append(links, a.Val)
+						links = append(links, strings.TrimSpace(a.Val))
 					} else {
 						relativeURL, err := url.Parse(a.Val)
 						if err != nil {
@@ -57,7 +57,7 @@ func GetURLsFromHTML(htmlBody, rawBaseURL string) ([]string, error) {
 							return nil, err
 						}
 						finalURL := baseURL.ResolveReference(relativeURL)
-						links = append(links, finalURL.String())
+						links = append(links, strings.TrimSpace(finalURL.String()))
 						break
 
 					}
