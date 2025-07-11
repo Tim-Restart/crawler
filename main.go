@@ -22,13 +22,36 @@ func main(){
 		website = os.Args[1]
 	}
 
-	body, err :=GetHTML(website)
-	if err != nil {
-		fmt.Println("Error parsing website body")
-		os.Exit(1)
+	
+
+	pages := make(map[string]int)
+
+	crawlPage(website, website, pages)
+
+	for _, page := range pages {
+		fmt.Println(page)
 	}
 
-	fmt.Println(body)
+	
+
+	// Testing absolute and relative URLS collections
+	/*
+	body, err := GetHTML(website)
+	if err != nil {
+		return
+	}
+
+	urls, err := GetURLsFromHTML(body, website)
+	if err != nil {
+		return
+	}
+
+	for i := range urls {
+		fmt.Println(urls[i])
+	}
+	*/
+
+	return
 
 	
 }

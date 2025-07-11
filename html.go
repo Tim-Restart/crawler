@@ -6,13 +6,14 @@ import (
 	"log"
 	"fmt"
 	"strings"
+	"os"
 	)
 
 func GetHTML(rawURL string) (string, error) {
-
+	
 	res, err := http.Get(rawURL)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	body, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
@@ -20,11 +21,11 @@ func GetHTML(rawURL string) (string, error) {
 		log.Fatalf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
 	}
 	if !strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") {
-		fmt.Println("Header not text/html")
-		log.Fatal(err)
+		err = fmt.Errorf("Header not text/html")
+		return "", err
 	}
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	return string(body), nil
 
@@ -46,39 +47,36 @@ func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
 	err = compareURL(rawBaseURL, rawCurrentURL)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return
 	}
 
 	// Start the HTML collection and review
 
-	html, err := GetHTML(crawlURL)
+	
+
+	_, exists := pages[crawlURL]
+	if exists {
+		pages[crawlURL] ++
+		return
+	}
+
+	pages[crawlURL] = 1
+	fmt.Printf("Crawling: %v\n", crawlURL)
+
+	html, err := GetHTML(rawCurrentURL)
 	if err != nil {
-		fmt.Println("Error getting html")
-		os.Exit(1)
+		fmt.Printf("Error getting html for %v\n", rawCurrentURL)
+		
 	}
 
-	crawlURL, exists := pages[link]
-	if !exists {
-		pages[crawlURL] = 1
-	}
-
-	links, err2 := GetURLsFromHTML(html, crawlURL)
+	links, err2 := GetURLsFromHTML(html, rawCurrentURL)
 	if err2 != nil {
 		fmt.Println("Error getting links from HTML")
 		os.Exit(1)
 	}
 	
-	for i := range links {
-		page, exists := pages[links[i]]
-		if exists {
-			pages[links[i]]:++
-		} else {
-			pages[links[i]] = 1
+	for _, newLink := range links {
+			crawlPage(rawBaseURL, newLink, pages)
 		}
+		
 	}
-
-	
-	
-
-
-}
