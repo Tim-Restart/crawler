@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"net/url"
+	"sync"
 	)
 
 type config struct {
@@ -17,7 +19,7 @@ type config struct {
 
 func main(){
 
-	
+	maxConcurrency := 1
 
 	var website string
 
@@ -42,16 +44,25 @@ func main(){
 	cfg := &config{
 		pages: make(map[string]int),
 		baseURL: baseLink,
-
+		mu: &sync.Mutex{},
+		concurrencyControl: make(chan struct{}, maxConcurrency),
+		wg : &sync.WaitGroup{},
 	}
 
+	cfg.wg.Add(1)
+	go func (cfg *config) {
+		defer cfg.wg.Done()
+		cfg.concurrencyControl <- struct{}{}
+		defer func() { <- cfg.concurrencyControl }()
+		cfg.crawlPage(website) 	
+	} (cfg)
+	cfg.wg.Wait()
 
-	cfg.crawlPage(website)
-
+	cfg.mu.Lock()
 	for _, page := range cfg.pages {
 		fmt.Println(page)
 	}
-
+	cfg.mu.Unlock()
 	return
 
 	

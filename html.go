@@ -51,7 +51,7 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 	}
 
 	// Start the HTML collection and review
-
+	cfg.mu.Lock()
 	_, exists := pages[crawlURL]
 	if exists {
 		pages[crawlURL] ++
@@ -60,6 +60,8 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 
 	cfg.pages[crawlURL] = 1
 	fmt.Printf("Crawling: %v\n", crawlURL)
+	
+	cfg.mu.Unlock()
 
 	html, err := GetHTML(rawCurrentURL)
 	if err != nil {
@@ -78,3 +80,6 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 		}
 		
 	}
+
+
+// func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool)
