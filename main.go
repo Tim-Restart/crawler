@@ -1,12 +1,11 @@
-package main 
+package main
 
 import (
 	"fmt"
-	"os"
 	"net/url"
+	"os"
 	"sync"
-	"golang.org/x/net/html"
-	)
+)
 
 type config struct {
 	pages              map[string]int
@@ -16,9 +15,7 @@ type config struct {
 	wg                 *sync.WaitGroup
 }
 
-
-
-func main(){
+func main() {
 
 	maxConcurrency := 1
 
@@ -35,28 +32,23 @@ func main(){
 		website = os.Args[1]
 	}
 
-	baseURLParsed, err := html.Parse(website)
+	baseURLParsed, err := stringToURL(website)
 	if err != nil {
-		fmt.Println("Error parsing base URL")
-		return err
+		fmt.Println("Failed to parse Base URL")
+		return
 	}
-	
+
 	// Pickup here with the Mu and channels stuff
 	cfg := &config{
-		pages: make(map[string]int),
-		baseURL: baseURLParsed,
-		mu: &sync.Mutex{},
+		pages:              make(map[string]int),
+		baseURL:            baseURLParsed,
+		mu:                 &sync.Mutex{},
 		concurrencyControl: make(chan struct{}, maxConcurrency),
-		wg : &sync.WaitGroup{},
+		wg:                 &sync.WaitGroup{},
 	}
 
 	cfg.wg.Add(1)
-	go func (cfg *config) {
-		defer cfg.wg.Done()
-		cfg.concurrencyControl <- struct{}{}
-		defer func() { <- cfg.concurrencyControl }()
-		cfg.crawlPage(website) 	
-	} (cfg)
+	go cfg.crawlPage(website)
 	cfg.wg.Wait()
 
 	cfg.mu.Lock()
@@ -66,5 +58,4 @@ func main(){
 	cfg.mu.Unlock()
 	return
 
-	
 }

@@ -6,14 +6,12 @@ import (
 	"strings"
 )
 
-func normalizeURL(link string) (string, error){
+func normalizeURL(link string) (string, error) {
 
 	// url input is the string that needs to be sanatised
 	// An example of a normalized url is : blog.boot.dev/path
 	// Inital thoughts are to detect and remove prefixes for http/https
 	// Suffix to remove any trailing /
-
-	
 
 	normalUrl, err := url.Parse(link)
 	if err != nil {
@@ -46,9 +44,10 @@ func compareURL(baseURL *url.URL, currentURL string) error {
 // func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool)
 
 func stringToURL(link string) (*url.URL, error) {
-	baseURLParsed, err := html.Parse(website)
+	baseURLParsed, err := url.Parse(link)
 	if err != nil {
 		fmt.Println("Error parsing base URL")
-		return err
+		return nil, err
 	}
+	return baseURLParsed, nil
 }

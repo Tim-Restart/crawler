@@ -1,16 +1,16 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
 	"io"
 	"log"
-	"fmt"
-	"strings"
+	"net/http"
 	"os"
-	)
+	"strings"
+)
 
 func GetHTML(rawURL string) (string, error) {
-	
+
 	res, err := http.Get(rawURL)
 	if err != nil {
 		return "", err
@@ -31,8 +31,13 @@ func GetHTML(rawURL string) (string, error) {
 
 }
 
-
 func (cfg *config) crawlPage(rawCurrentURL string) {
+
+	cfg.concurrencyControl <- struct{}{}
+	defer func() {
+		<-cfg.concurrencyControl
+		cfg.wg.Done()
+	}()
 
 	// Base and Current are the same for the first
 	// Current is used to do the calls, base is used for a base case
@@ -51,22 +56,14 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 	}
 
 	// Start the HTML collection and review
-	cfg.mu.Lock()
-	_, exists := pages[crawlURL]
-	if exists {
-		pages[crawlURL] ++
+	if !cfg.addPageVisit(crawlURL) {
 		return
 	}
-
-	cfg.pages[crawlURL] = 1
-	fmt.Printf("Crawling: %v\n", crawlURL)
-	
-	cfg.mu.Unlock()
 
 	html, err := GetHTML(rawCurrentURL)
 	if err != nil {
 		fmt.Printf("Error getting html for %v\n", rawCurrentURL)
-		
+
 	}
 
 	links, err2 := GetURLsFromHTML(html, rawCurrentURL)
@@ -74,12 +71,23 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 		fmt.Println("Error getting links from HTML")
 		os.Exit(1)
 	}
-	
+
 	for _, newLink := range links {
-			cfg.crawlPage(newLink)
-		}
-		
+		cfg.wg.Add(1)
+		go cfg.crawlPage(newLink)
 	}
 
+}
 
-// func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool)
+func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool) {
+	cfg.mu.Lock()
+	defer cfg.mu.Unlock()
+
+	if _, exists := cfg.pages[normalizedURL]; exists {
+		cfg.pages[normalizedURL]++
+		return false
+	}
+
+	cfg.pages[normalizedURL] = 1
+	return true
+}
