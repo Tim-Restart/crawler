@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// Wrong email for commit
 func GetHTML(rawURL string) (string, error) {
 
 	res, err := http.Get(rawURL)
