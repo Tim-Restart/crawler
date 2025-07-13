@@ -34,6 +34,13 @@ func GetHTML(rawURL string) (string, error) {
 
 func (cfg *config) crawlPage(rawCurrentURL string) {
 
+	cfg.mu.Lock()
+	if len(cfg.pages) >= cfg.maxPages {
+		fmt.Printf("Max crawl pages reached: %v\n", cfg.maxPages)
+		os.Exit(0)
+	}
+	cfg.mu.Unlock()
+
 	cfg.concurrencyControl <- struct{}{}
 	defer func() {
 		<-cfg.concurrencyControl

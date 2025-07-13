@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"sync"
 )
 
@@ -13,24 +14,56 @@ type config struct {
 	mu                 *sync.Mutex
 	concurrencyControl chan struct{}
 	wg                 *sync.WaitGroup
+	maxPages           int
 }
 
 func main() {
 
-	maxConcurrency := 1
+	var maxConcurrency int
+	var maxPagesSet int
 
 	var website string
 
-	if len(os.Args) <= 1 {
+	switch len(os.Args) {
+	case 1:
 		fmt.Println("no website provided")
 		os.Exit(1)
-	} else if len(os.Args) > 2 {
-		fmt.Println("too many arguments provided")
-		os.Exit(1)
-	} else {
+	case 2:
 		fmt.Printf("starting crawl of: %v\n", os.Args[1])
 		website = os.Args[1]
+		fmt.Println("Max pages set to default 10 and concurrency set to default 5")
+		maxConcurrency = 5
+		maxPagesSet = 10
+	case 3:
+		fmt.Printf("starting crawl of: %v\n", os.Args[1])
+		website = os.Args[1]
+		maxConcurrency, _ = strconv.Atoi(os.Args[2])
+		fmt.Printf("Max Concurrency set to : %v\n", maxConcurrency)
+		fmt.Println("Max pages set to default 10")
+		maxPagesSet = 10
+	case 4:
+		fmt.Printf("starting crawl of: %v\n", os.Args[1])
+		website = os.Args[1]
+		maxConcurrency, _ = strconv.Atoi(os.Args[2])
+		fmt.Printf("Max Concurrency set to : %v\n", maxConcurrency)
+		maxPagesSet, _ = strconv.Atoi(os.Args[3])
+		fmt.Printf("Max pages set to : %v\n", maxPagesSet)
+	default:
+		fmt.Println("Failed to set right parameters")
+		return
 	}
+	/*
+		if len(os.Args) <= 1 {
+			fmt.Println("no website provided")
+			os.Exit(1)
+		} else if len(os.Args) > 2 {
+			fmt.Println("too many arguments provided")
+			os.Exit(1)
+		} else {
+			fmt.Printf("starting crawl of: %v\n", os.Args[1])
+			website = os.Args[1]
+		}
+	*/
 
 	baseURLParsed, err := stringToURL(website)
 	if err != nil {
@@ -45,6 +78,7 @@ func main() {
 		mu:                 &sync.Mutex{},
 		concurrencyControl: make(chan struct{}, maxConcurrency),
 		wg:                 &sync.WaitGroup{},
+		maxPages:           maxPagesSet,
 	}
 
 	cfg.wg.Add(1)
