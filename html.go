@@ -76,7 +76,7 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 	}
 	
 	for _, newLink := range links {
-			crawlPage(newLink)
+			cfg.crawlPage(newLink)
 		}
 		
 	}

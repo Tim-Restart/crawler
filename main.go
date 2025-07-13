@@ -5,6 +5,7 @@ import (
 	"os"
 	"net/url"
 	"sync"
+	"golang.org/x/net/html"
 	)
 
 type config struct {
@@ -34,16 +35,16 @@ func main(){
 		website = os.Args[1]
 	}
 
-	baseLink, err := normalizeURL(website)
+	baseURLParsed, err := html.Parse(website)
 	if err != nil {
-		fmt.Println("Error normalizing URL")
-		return
+		fmt.Println("Error parsing base URL")
+		return err
 	}
-
+	
 	// Pickup here with the Mu and channels stuff
 	cfg := &config{
 		pages: make(map[string]int),
-		baseURL: baseLink,
+		baseURL: baseURLParsed,
 		mu: &sync.Mutex{},
 		concurrencyControl: make(chan struct{}, maxConcurrency),
 		wg : &sync.WaitGroup{},

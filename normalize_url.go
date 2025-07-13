@@ -43,4 +43,12 @@ func compareURL(baseURL *url.URL, currentURL string) error {
 	}
 }
 
-func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool)
+// func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool)
+
+func stringToURL(link string) (*url.URL, error) {
+	baseURLParsed, err := html.Parse(website)
+	if err != nil {
+		fmt.Println("Error parsing base URL")
+		return err
+	}
+}
