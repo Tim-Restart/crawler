@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -19,7 +17,8 @@ func GetHTML(rawURL string) (string, error) {
 	body, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
 	if res.StatusCode > 399 {
-		log.Fatalf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		fmt.Printf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		return "", err
 	}
 	if !strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") {
 		err = fmt.Errorf("Header not text/html")
@@ -34,25 +33,27 @@ func GetHTML(rawURL string) (string, error) {
 
 func (cfg *config) crawlPage(rawCurrentURL string) {
 
-	cfg.mu.Lock()
-	if len(cfg.pages) >= cfg.maxPages {
-		fmt.Printf("Max crawl pages reached: %v\n", cfg.maxPages)
-		os.Exit(0)
-	}
-	cfg.mu.Unlock()
-
+	fmt.Printf("Crawling: %v\n", rawCurrentURL)
 	cfg.concurrencyControl <- struct{}{}
 	defer func() {
 		<-cfg.concurrencyControl
 		cfg.wg.Done()
 	}()
 
+	cfg.mu.Lock()
+	if len(cfg.pages) >= cfg.maxPages {
+		fmt.Printf("Max crawl pages reached: %v\n", cfg.maxPages)
+		cfg.mu.Unlock()
+		return
+	}
+	cfg.mu.Unlock()
+
 	// Base and Current are the same for the first
 	// Current is used to do the calls, base is used for a base case
 	crawlURL, err := normalizeURL(rawCurrentURL)
 	if err != nil {
 		fmt.Println("Error normalising URL")
-		os.Exit(1)
+		return
 	}
 
 	// Uses url.Parse to compare the baseURL and CurrentURL (after normalization)
@@ -77,7 +78,7 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 	links, err2 := GetURLsFromHTML(html, rawCurrentURL)
 	if err2 != nil {
 		fmt.Println("Error getting links from HTML")
-		os.Exit(1)
+		return
 	}
 
 	for _, newLink := range links {
