@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sort"
 )
 
 // Wrong email for commit
@@ -99,4 +100,49 @@ func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool) {
 
 	cfg.pages[normalizedURL] = 1
 	return true
+}
+
+func printReport(pages map[string]int, baseURL string) {
+	fmt.Printf(`
+=============================
+  REPORT for %v
+=============================
+`, baseURL)
+
+	sortedPageMap := sorted(pages)
+
+	for page, value := range sortedPageMap {
+		fmt.Printf("Found %v internal links to %v\n", page, value) 
+	}
+
+
+
+// Sorting logic
+// Iterate through the list, looking for the highest number... 
+// print that first, then continue on down...
+// data structure? 
+// Append to new slice?
+// Maybe find a 1 then keep going up? Then print backwards...?
+}
+
+type KeyValue struct {
+	Key string
+	Value int
+}
+
+func sorted(pages map[string]int) []KeyValue {
+
+	var sortedPages[]KeyValue
+
+	for k, v := range pages {
+		sortedPages = append(sortedPages, KeyValue{Key: k, Value: v})
+	}
+
+
+	sort.Slice(sortedPages, func(i, j int) bool {
+		return sortedPages[i].Value > sortedPages[j].Value 
+	})
+
+	return sortedPages
+	
 }

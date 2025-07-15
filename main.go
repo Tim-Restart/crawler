@@ -86,9 +86,14 @@ func main() {
 	cfg.wg.Wait()
 
 	cfg.mu.Lock()
+	/*
 	for _, page := range cfg.pages {
 		fmt.Println(page)
 	}
+		*/
+
+	printReport(cfg.pages, website)
+
 	cfg.mu.Unlock()
 	return
 
