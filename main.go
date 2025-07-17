@@ -52,18 +52,6 @@ func main() {
 		fmt.Println("Failed to set right parameters")
 		return
 	}
-	/*
-		if len(os.Args) <= 1 {
-			fmt.Println("no website provided")
-			os.Exit(1)
-		} else if len(os.Args) > 2 {
-			fmt.Println("too many arguments provided")
-			os.Exit(1)
-		} else {
-			fmt.Printf("starting crawl of: %v\n", os.Args[1])
-			website = os.Args[1]
-		}
-	*/
 
 	baseURLParsed, err := stringToURL(website)
 	if err != nil {
@@ -86,11 +74,6 @@ func main() {
 	cfg.wg.Wait()
 
 	cfg.mu.Lock()
-	/*
-	for _, page := range cfg.pages {
-		fmt.Println(page)
-	}
-		*/
 
 	printReport(cfg.pages, website)
 
